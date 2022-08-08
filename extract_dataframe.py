@@ -82,64 +82,130 @@ class TweetDfExtractor:
         return polarityList, subjectivityList
 
     def find_created_time(self)->list:
+        created_at = [x['created_at']
+                        for x in self.tweets_list]
         
         return created_at
 
     def find_source(self)->list:
-        source = 
+        source = [x['source'] 
+                    for x in self.tweets_list]
 
         return source
 
     def find_screen_name(self)->list:
-        screen_name = 
+        screen_name = [x['user']['screen_name'] 
+                        for x in self.tweets_list]
+
+        return screen_name
 
     def find_followers_count(self)->list:
-        followers_count = 
+        followers_count = [x['user']['followers_count']
+                           for x in self.tweets_list]
+
+        return followers_count
 
     def find_friends_count(self)->list:
-        friends_count = 
+        friends_count = [x['user']['friends_count'] 
+                            for x in self.tweets_list]
+
+        return friends_count
 
     def is_sensitive(self)->list:
-        try:
-            is_sensitive = [x['possibly_sensitive'] for x in self.tweets_list]
-        except KeyError:
-            is_sensitive = None
+        is_sensitive = []
+        for tweet in self.tweets_list:
+            try:
+                value = tweet["retweeted_status"]['possibly_sensitive']
+                if(not value):
+                    is_sensitive.append(None)
+                else:
+                    is_sensitive.append(value)
+            except KeyError:
+                is_sensitive.append(None)
 
         return is_sensitive
 
     def find_favourite_count(self)->list:
-        
+        favourite_count = []
+        for tweet in self.tweets_list:
+            try:
+                favourite_count.append(
+                    tweet["retweeted_status"]['favorite_count'])
+            except KeyError:
+                favourite_count.append(0)
+
+        return favourite_count
     
     def find_retweet_count(self)->list:
-        retweet_count = 
+        retweet_count = []
+        for tweet in self.tweets_list:
+            try:
+                retweet_count.append(
+                    tweet["retweeted_status"]['retweet_count'])
+            except KeyError:
+                retweet_count.append(0)
+
+        return retweet_count 
 
     def find_hashtags(self)->list:
-        hashtags =
+        hashtags = []
+        for tweet in self.tweets_list:
+            try:
+                hashtags.append(tweet['entities']['hashtags'][0]['text'])
+            except KeyError:
+                hashtags.append(None)
+            except IndexError:
+                hashtags.append(None)
+
+        return hashtags
 
     def find_mentions(self)->list:
-        mentions = 
+        mentions = []
+        main_mentions = [x['entities']['user_mentions']
+                         for x in self.tweets_list]
+        for mention in main_mentions:
+            for each in mention:
+                mentions.append(each['screen_name'])
+
+        return mentions
 
 
     def find_location(self)->list:
         try:
-            location = self.tweets_list['user']['location']
+            location = [x['user']['location'] 
+                        for x in self.tweets_list]
         except TypeError:
             location = ''
         
         return location
-
     
-        
+    def find_place(self)->list:
+        place = [x['place'] for x in self.tweets_list]
+
+        return place
+
+    def find_coordinates(self) -> list:
+        coordinates = [x['coordinates'] 
+                        for x in self.tweets_list]
+
+        return coordinates
+    
+    def find_lang(self)->list:
+        language = [x['lang'] for x in self.tweets_list]
+
+        return language
+
         
     def get_tweet_df(self, save=False)->pd.DataFrame:
         """required column to be generated you should be creative and add more features"""
         
-        columns = ['created_at', 'source', 'original_text','polarity','subjectivity', 'lang', 'favorite_count', 'retweet_count', 
-            'original_author', 'followers_count','friends_count','possibly_sensitive', 'hashtags', 'user_mentions', 'place']
+        columns = ['created_at', 'source', 'original_text','clean_text','polarity','subjectivity', 'lang', 'favorite_count', 'retweet_count', 
+            'original_author', 'followers_count','friends_count','possibly_sensitive', 'hashtags', 'user_mentions','location', 'place',' place_coord_boundaries']
         
         created_at = self.find_created_time()
         source = self.find_source()
         text = self.find_full_text()
+        clean_text = self.find_clean_text()
         polarity, subjectivity = self.find_sentiments(text)
         lang = self.find_lang()
         fav_count = self.find_favourite_count()
@@ -151,7 +217,10 @@ class TweetDfExtractor:
         hashtags = self.find_hashtags()
         mentions = self.find_mentions()
         location = self.find_location()
-        data = zip(created_at, source, text, polarity, subjectivity, lang, fav_count, retweet_count, screen_name, follower_count, friends_count, sensitivity, hashtags, mentions, location)
+        place = self.find_place()
+        place_coord_boundaries = self.find_coordinates() 
+        data = zip(created_at, source, text,clean_text, polarity, subjectivity, lang, fav_count, retweet_count, screen_name, 
+        follower_count, friends_count, sensitivity, hashtags, mentions, location, place, place_coord_boundaries)
         df = pd.DataFrame(data=data, columns=columns)
 
         if save:
