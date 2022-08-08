@@ -36,18 +36,53 @@ class TweetDfExtractor:
 
     # an example function
     def find_statuses_count(self)->list:
-        statuses_count 
-        
-    def find_full_text(self)->list:
-        text = 
-       
+        statuses_count = [x['user']['statuses_count']
+                         for x in self.tweets_list]
+
+        return statuses_count
+
+    # text from column 'full_text' not clean
+    def find_full_text(self)->list: 
+        full_text = [x['full_text'] 
+                    for x in self.tweets_list] 
+
+        return full_text
+
+    def find_clean_text(self)-> list:
+        clean_text = full_text = []
+        for tweet in self.tweets_list:
+            try:
+                clean_text.append(
+                    tweet["retweeted_status"]['extended_tweet']['clean_text'])
+            except KeyError:
+                clean_text.append("")
+
+        return clean_text
     
-    def find_sentiments(self, text)->list:
-        
-        return polarity, self.subjectivity
+    def find_sentiment(self, polarity, subjectivity) -> list:
+        sentiment = []
+        for i in range(len(polarity)):
+            if polarity[i] > 0:
+                sentiment.append(1)
+            elif polarity[i] < 0:
+                sentiment.append(0)
+            else:
+                sentiment.append(-1)
+
+        return sentiment
+
+    def find_sentiments(self, text) -> list:
+        polarityList = []
+        subjectivityList = []
+        for eachText in text:
+            polarity, subjectivity = TextBlob(eachText).sentiment
+            polarityList.append(polarity)
+            subjectivityList.append(subjectivity)
+
+        return polarityList, subjectivityList
 
     def find_created_time(self)->list:
-       
+        
         return created_at
 
     def find_source(self)->list:
