@@ -58,18 +58,6 @@ class TweetDfExtractor:
                 clean_text.append("")
 
         return clean_text
-    
-    def find_sentiment(self, polarity, subjectivity) -> list:
-        sentiment = []
-        for i in range(len(polarity)):
-            if polarity[i] > 0:
-                sentiment.append(1)
-            elif polarity[i] < 0:
-                sentiment.append(0)
-            else:
-                sentiment.append(-1)
-
-        return sentiment
 
     def find_sentiments(self, text) -> list:
         polarityList = []
